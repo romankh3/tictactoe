@@ -1,0 +1,32 @@
+plugins {
+    id 'jacoco'
+    id 'java'
+    id 'application'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
+}
+
+
+group 'TicTacToe'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-all:1.8.4'
+}
+
+
+mainClassName = "ua.toe.tac.tic.Main"
