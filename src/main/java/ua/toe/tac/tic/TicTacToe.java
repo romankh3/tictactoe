@@ -2,23 +2,20 @@ package ua.toe.tac.tic;
 
 import ua.toe.tac.tic.enums.Player;
 import ua.toe.tac.tic.enums.Direction;
+import ua.toe.tac.tic.model.Board;
 import ua.toe.tac.tic.model.Point;
 import ua.toe.tac.tic.model.TheMove;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 
 import static ua.toe.tac.tic.enums.Direction.*;
 
 public class TicTacToe {
 
-    private int height;
-    private int width;
     private int coincidenceCount = 3;
-
-    private final String[][] board;
+    private final Board board;
 
     public static Player run() throws IOException {
         BufferedReader reader = new BufferedReader( new InputStreamReader(System.in));
@@ -28,7 +25,7 @@ public class TicTacToe {
         int width = Integer.valueOf(borderSize[1]);
         System.out.println("Please, fill the count of the coincidence. Example '3' ");
         String expectedCoincidenceCount = reader.readLine();
-        TicTacToe game = new TicTacToe( height, width );
+        TicTacToe game = new TicTacToe( width, height );
         game.setCoincidenceCount( Integer.valueOf( expectedCoincidenceCount ) );
         boolean isPlayerX = true;
         while ( true ) {
@@ -36,13 +33,13 @@ public class TicTacToe {
             String s = reader.readLine();
             String[] ss = s.split( "x" );
             Point point = new Point(Integer.valueOf(ss[0]),Integer.valueOf(ss[1]) );
-            if ( isBorderBoundsOut( point, height, width ) ) {
+            if ( game.board.checkTheExitOfTheBorders( point ) ) {
                 System.out.println("The point is out of the border bounds. Please, try again.");
                 continue;
             }
             TheMove move = new TheMove( point , isPlayerX ? Player.X : Player.O );
             TheMove resultOfTheMoving = game.move( move );
-            if( resultOfTheMoving.getCountOfTheCoincidence() == game.getCoincidenceCount() ) {
+            if( resultOfTheMoving.isWin( game.getCoincidenceCount() ) ) {
                 game.finish( resultOfTheMoving );
                 return resultOfTheMoving.getPlayer();
             }
@@ -51,45 +48,16 @@ public class TicTacToe {
         }
     }
 
-    private static boolean isBorderBoundsOut( Point point, int height, int width ) {
-        return point.getX() >= width ||
-                point.getX() < 0 ||
-                point.getY() >= height ||
-                point.getY() < 0;
-    }
-
-    public TicTacToe( int height, int width ) {
-        this.height = height;
-        this.width = width;
-        System.out.println("Welcome to the N x M board tictactoe. ");
-        board = setDefaultMatrix( height, width );
+    public TicTacToe( int width, int height ) {
+        System.out.println("Welcome to the "+height+" x " + width + " board tictactoe. ");
+        board = new Board( width, height );
         System.out.println( "The game is started" );
-        printTheBoard();
-    }
-
-    private String[][] setDefaultMatrix( int height, int width ) {
-        String[][] matrix = new String[height][width];
-        for( int i = 0; i < height; i ++ ) {
-            Arrays.fill( matrix[i], "." );
-        }
-        return matrix;
-    }
-
-    private void printTheBoard() {
-        System.out.println();
-        for (int y = 0; y < board.length; y++) {
-            for (int x = 0; x < board[0].length; x++) {
-                System.out.print(" " + board[y][x] + " ");
-            }
-            System.out.println();
-        }
-        System.out.println();
+        board.printTheBoard();
     }
 
     public TheMove move( TheMove move ) {
-        board[move.getPoint().getY()][move.getPoint().getX()] = move.getPlayer().name();
-        printTheBoard();
-        return findCoincidences(Direction.East, move );
+        board.markPoint( move );
+        return findCoincidences( Direction.East, move );
     }
 
     private void finish( TheMove move ) {
@@ -103,173 +71,151 @@ public class TicTacToe {
     private TheMove findCoincidences( Direction direction, TheMove move ) {
         switch ( direction ) {
             case East:
-                if ( checkBoardBorders( East, move) ) {
-                    if ( board[move.getPoint().getY()][move.getPoint().getX() + 1].equals( move.getPlayer().name() )  ) {
+                if ( board.checkTheExitOfTheBorders( East, move) ) {
+                    if ( board.isPlayerMarkThisPoint( East, move )  ) {
 
-                        // check for a coincidence
-                        if ( isWin(move) ) return move;
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         //move to next point along to this direction.
-                        moveTo( move, 1, 0 );
+                        move.moveTo(  1, 0 );
 
-                        if ( findCoincidences( East, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( East, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
                 // set default coincidence and revers.
-                if( runReversMove( West, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                if( runReversMove( West, move ).isWin( coincidenceCount ) ) return move;
                 break;
             case West:
-                if ( checkBoardBorders( West, move) ) {
-                    if ( board[move.getPoint().getY()][move.getPoint().getX() - 1].equals( move.getPlayer().toString() ) ) {
+                if ( board.checkTheExitOfTheBorders( West, move ) ) {
+                    if ( board.isPlayerMarkThisPoint( West, move ) ) {
 
-                        // check for a coincidence
-                        if ( isWin(move) ) {
-                            break;
-                        }
-                        if( move.getCountOfTheCoincidence() == 3 ) {
-                            return move;
-                        }
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         //move to next point along to this direction.
-                        moveTo( move, -1, 0 );
+                        move.moveTo(  -1, 0 );
 
                         // go to this forward.
-                        if ( findCoincidences( West, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( West, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
-                move.setCountOfTheCoincidence( 1 );
+                move.setDefaultCoincidence();
             case SouthEast:
-                if ( checkBoardBorders( SouthEast, move) ) {
-                    if ( board[move.getPoint().getY() + 1][move.getPoint().getX() + 1].equals( move.getPlayer().name() ) ) {
-                        // check for a coincidence
-                        if ( isWin(move) ) break;
+                if ( board.checkTheExitOfTheBorders( SouthEast, move ) ) {
+                    if ( board.isPlayerMarkThisPoint( SouthEast, move ) ) {
+
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         //move to next point along to this direction.
-                        moveTo( move, 1, 1 );
+                        move.moveTo(  1, 1 );
 
                         // go to this forward.
-                        if ( findCoincidences( SouthEast, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( SouthEast, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
                 // set default coincidence and revers.
-                if( runReversMove( NorthWest, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                if( runReversMove( NorthWest, move ).isWin( coincidenceCount ) ) return move;
                 break;
             case NorthWest:
-                if ( checkBoardBorders( NorthWest, move) ) {
-                    if ( board[move.getPoint().getY() - 1][move.getPoint().getX() - 1].equals( move.getPlayer().name() ) ) {
-                        // check for a coincidence
-                        if ( isWin(move) ) return move;
+                if ( board.checkTheExitOfTheBorders( NorthWest, move) ) {
+                    if ( board.isPlayerMarkThisPoint( NorthWest, move ) ) {
 
-                        //move to next point along to this direction.
-                        moveTo( move, -1, -1 );
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         // go to this forward.
-                        if ( findCoincidences( NorthWest, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( NorthWest, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
-                move.setCountOfTheCoincidence( 1 );
+                move.setDefaultCoincidence();
             case South:
-                if ( checkBoardBorders( South, move) ) {
-                    if ( board[move.getPoint().getY() + 1 ][move.getPoint().getX()].equals( move.getPlayer().name() ) ) {
-                        // check for a coincidence
-                        if ( isWin(move) ) return move;
+                if ( board.checkTheExitOfTheBorders( South, move ) ) {
+                    if ( board.isPlayerMarkThisPoint( South, move ) ) {
+
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         //move to next point along to this direction.
-                        moveTo( move, 0, 1 );
+                        move.moveTo(  0, 1 );
 
                         // go to this forward.
-                        if ( findCoincidences( South, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( South, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
                 // set default coincidence and revers.
-                if( runReversMove( North, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                if( runReversMove( North, move ).isWin( coincidenceCount ) ) return move;
                 break;
             case North:
-                if ( checkBoardBorders( North, move) ) {
-                    if ( board[move.getPoint().getY() - 1 ][move.getPoint().getX()].equals( move.getPlayer().name() ) ) {
-                        // check for a coincidence
-                        if ( isWin(move) ) return move;
+                if ( board.checkTheExitOfTheBorders( North, move ) ) {
+                    if ( board.isPlayerMarkThisPoint( North, move ) ) {
+
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         //move to next point along to this direction.
-                        moveTo( move, 0, -1 );
+                        move.moveTo(  0, -1 );
 
                         // go to this forward.
-                        if ( findCoincidences( North, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( North, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
-                move.setCountOfTheCoincidence( 1 );
+                move.setDefaultCoincidence();
             case SouthWest:
-                if ( checkBoardBorders( SouthWest, move) ) {
-                    if ( board[move.getPoint().getY() + 1][move.getPoint().getX() - 1].equals( move.getPlayer().name() ) ) {
-                        // check for a coincidence
-                        if ( isWin(move) ) return move;
+                if ( board.checkTheExitOfTheBorders( SouthWest, move ) ) {
+                    if ( board.isPlayerMarkThisPoint( SouthWest, move ) ) {
+
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         //move to next point along to this direction.
-                        moveTo( move, -1, 1 );
+                        move.moveTo(  -1, 1 );
 
                         // go to this forward.
-                        if ( findCoincidences( SouthWest, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( SouthWest, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
                 // set default coincidence and revers.
-                if( runReversMove( NorthEast, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                if( runReversMove( NorthEast, move ).isWin( coincidenceCount ) ) return move;
                 break;
             case NorthEast:
-                if ( checkBoardBorders( NorthEast, move) ) {
-                    if ( board[move.getPoint().getY() - 1][move.getPoint().getX() + 1].equals( move.getPlayer().name() ) ) {
+                if ( board.checkTheExitOfTheBorders( NorthEast, move ) ) {
+                    if ( board.isPlayerMarkThisPoint( NorthEast, move ) ) {
 
-                        if ( isWin(move) ) return move;
+                        // increment count of the coincidence
+                        move.incrementCoincidence();
+
+                        if ( move.isWin( coincidenceCount ) ) return move;
 
                         //move to next point along to this direction.
-                        moveTo( move, 1, -1 );
+                        move.moveTo( 1, -1 );
 
                         // go to this forward.
-                        if ( findCoincidences( NorthEast, move ).getCountOfTheCoincidence() == coincidenceCount ) return move;
+                        if ( findCoincidences( NorthEast, move ).isWin( coincidenceCount ) ) return move;
                     }
                 }
         }
         return move;
     }
 
-    private boolean checkBoardBorders( Direction direction, TheMove move ) {
-        switch ( direction ) {
-            case East:
-                return move.getPoint().getX() + 1 < width;
-            case West:
-                return 0 <= move.getPoint().getX() - 1;
-            case North:
-                return 0 <= move.getPoint().getY() - 1;
-            case South:
-                return move.getPoint().getY() + 1 < height;
-            case NorthEast:
-                return 0 <= move.getPoint().getY() - 1 && move.getPoint().getX() + 1 < width;
-            case NorthWest:
-                return 0 <= move.getPoint().getY() - 1 && 0 <= move.getPoint().getX() - 1;
-            case SouthEast:
-                return move.getPoint().getY() + 1 < height && move.getPoint().getX() + 1 < width;
-            case SouthWest:
-                return move.getPoint().getY() + 1 < height && 0 <= move.getPoint().getX() - 1;
-        }
-        return true;
-    }
-
     private TheMove runReversMove(Direction direction, TheMove move ) {
-        move.setCountOfTheCoincidence( 1 );
+        move.setDefaultCoincidence();
         return findCoincidences( direction, move );
-    }
-
-    private void moveTo(TheMove move, int x, int y ) {
-        move.getPoint().setX( move.getPoint().getX() + x );
-        move.getPoint().setY( move.getPoint().getY() + y );
-    }
-
-    private boolean isWin( TheMove move ) {
-        move.setCountOfTheCoincidence( move.getCountOfTheCoincidence() + 1 );
-        return move.getCountOfTheCoincidence() == coincidenceCount;
-    }
-
-    public String[][] getBoard() {
-        return board;
     }
 
     public int getCoincidenceCount() {
@@ -279,5 +225,4 @@ public class TicTacToe {
     public void setCoincidenceCount(int coincidenceCount) {
         this.coincidenceCount = coincidenceCount;
     }
-
 }
