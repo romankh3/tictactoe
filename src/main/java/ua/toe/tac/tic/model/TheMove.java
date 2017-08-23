@@ -14,21 +14,28 @@ public class TheMove {
         this.player = player;
     }
 
-    public int getCountOfTheCoincidence() {
+    public void incrementCoincidence() {
+        ++countOfTheCoincidence;
+    }
 
+    public void setDefaultCoincidence() {
+        countOfTheCoincidence = 1;
+    }
+
+    public boolean isWin( int requiredCoincidence ) {
+        return countOfTheCoincidence == requiredCoincidence;
+    }
+
+    public void moveTo( int x, int y ) {
+        point.setX( point.getX() + x );
+        point.setY( point.getY() + y );
+    }
+
+    public int getCountOfTheCoincidence() {
         return countOfTheCoincidence;
     }
 
-    public void setCountOfTheCoincidence(int countOfTheCoincidence) {
-        this.countOfTheCoincidence = countOfTheCoincidence;
-    }
-
-    public void setPoint(Point point) {
-        this.point = point;
-    }
-
     public Point getPoint() {
-
         return point;
     }
 
