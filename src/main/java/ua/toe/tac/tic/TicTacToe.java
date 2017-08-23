@@ -25,7 +25,7 @@ public class TicTacToe {
         int width = Integer.valueOf(borderSize[1]);
         System.out.println("Please, fill the count of the coincidence. Example '3' ");
         String expectedCoincidenceCount = reader.readLine();
-        TicTacToe game = new TicTacToe( height, width );
+        TicTacToe game = new TicTacToe( width, height );
         game.setCoincidenceCount( Integer.valueOf( expectedCoincidenceCount ) );
         boolean isPlayerX = true;
         while ( true ) {
@@ -48,7 +48,7 @@ public class TicTacToe {
         }
     }
 
-    public TicTacToe( int height, int width ) {
+    public TicTacToe( int width, int height ) {
         System.out.println("Welcome to the "+height+" x " + width + " board tictactoe. ");
         board = new Board( width, height );
         System.out.println( "The game is started" );

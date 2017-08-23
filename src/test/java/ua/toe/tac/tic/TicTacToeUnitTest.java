@@ -11,11 +11,11 @@ import ua.toe.tac.tic.model.TheMove;
  */
 public class TicTacToeUnitTest {
 
+    private TicTacToe ticTacToe = new TicTacToe( 3, 3 );
+
+
     @Test
     public void testCorrectGamePlayWithWinnerX() {
-
-        TicTacToe ticTacToe = new TicTacToe( 3, 3 );
-
         // simulate game with known winner.
         TheMove move = new TheMove(new Point(1,1),Player.X);
         ticTacToe.move(move);
@@ -44,9 +44,6 @@ public class TicTacToeUnitTest {
 
     @Test
     public void testCorrectGamePlayWithWinnerO() {
-
-        TicTacToe ticTacToe = new TicTacToe( 3, 3 );
-
         // simulate game with known winner.
         TheMove move = new TheMove(new Point(1,1),Player.X);
         ticTacToe.move(move);
