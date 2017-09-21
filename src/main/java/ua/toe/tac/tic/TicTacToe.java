@@ -29,7 +29,7 @@ public class TicTacToe {
         game.setCoincidenceCount( Integer.valueOf( expectedCoincidenceCount ) );
         boolean isPlayerX = true;
         while ( true ) {
-            System.out.println("Please, fill the point. Example: '1 0' 4");
+            System.out.println("Please, fill the point. Example: '1x0'");
             String s = reader.readLine();
             String[] ss = s.split( "x" );
             Point point = new Point(Integer.valueOf(ss[0]),Integer.valueOf(ss[1]) );
@@ -44,7 +44,7 @@ public class TicTacToe {
                 return resultOfTheMoving.getPlayer();
             }
             // Change player.
-            isPlayerX = resultOfTheMoving.getPlayer() != Player.X;
+            isPlayerX = !isPlayerX;
         }
     }
 
