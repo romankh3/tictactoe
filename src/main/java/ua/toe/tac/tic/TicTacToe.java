@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import static ua.toe.tac.tic.enums.Direction.*;
 
 public class TicTacToe {
-
+    private int countX = 15;
     private int coincidenceCount = 3;
     private final Board board;
 
